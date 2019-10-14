@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="utf-8">
+<title>Parallel Coordinates</title>
+<script src="https://d3js.org/d3.v4.js"></script>
+</head>
+
+<body>
+<h1><center>SmartPhone Usage</center></h1>
+</body>
+
+
+<script>
+
+// select dimensions and margins
+var margin = {top: 30, right: 10, bottom: 10, left: 0},
+  width = 1500 - margin.left - margin.right,
+  height = 500 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("body")
+.append("svg")
+  .attr("width", width + margin.left + margin.right)
+  .attr("height", height + margin.top + margin.bottom)
+.append("g")
+  .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
+
+
+//  read data from CSV file
+d3.csv("a2.csv", function(data) {
+
+  // filter out questions we don't want to use
+  dimensions = d3.keys(data[0]).filter(function(d) { return d != "Q23"})
+
+
+  // iterate through question and build a linear scale and store in object
+  var y = {}
+  for (i in dimensions) {
+    name = dimensions[i]
+    y[name] = d3.scaleLinear()
+      .domain( d3.extent(data, function(d) { return +d[name]; }) )
+      .range([height, 0])
+  }
+
+  // create x scale
+  x = d3.scalePoint()
+    .range([0, width])
+    .padding(1)
+    .domain(dimensions);
+
+  // use row of the csv as input, and return x and y coordinates of the line
+  function path(d) {
+      return d3.line()(dimensions.map(function(p) { return [x(p), y[p](d[p])]; }));
+  }
+
+
+  // draw the lines
+  svg
+    .selectAll("paths")
+    .data(data)
+    .enter().append("path")
+    .attr("d",  path)
+    .style("fill", "none")
+    .style("stroke", "blue")
+    .style("opacity", 0.3)
+
+
+  // draw the axis:
+  svg.selectAll("axis")
+    // add g element to each item in data set
+    .data(dimensions).enter()
+    .append("g")
+    // translate element to position on the x axis
+    .attr("transform", function(d) { return "translate(" + x(d) + ")"; })
+    // build the axis
+    .each(function(d) { d3.select(this).call(d3.axisLeft().scale(y[d])); })
+    // add question numbers as titles
+    .append("text")
+      .style("text-anchor", "middle")
+      .attr("y", -9)
+      .text(function(d) { return d; })
+      .style("fill", "black")
+
+})
+
+
+</script>
+</html>
