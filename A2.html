@@ -32,14 +32,24 @@ var svg = d3.select("body")
 //  read data from CSV file
 d3.csv("a2.csv", function(data) {
 
-  // filter out questions we don't want to use
-  dimensions = d3.keys(data[0]).filter(function(d) { return d != "Q23"})
+  // filter out questions we want to use
+  dimensions = d3.keys(data[0]).filter(function(d) { return d == "Q37"})
+  dimensions2 = d3.keys(data[0]).filter(function(d) { return d == "Q44"})
+  dimensions3 = d3.keys(data[0]).filter(function(d) { return d == "Q11G"})
+  dimensions4 = d3.keys(data[0]).filter(function(d) { return d == "Q13C"})
+  dimensions5 = d3.keys(data[0]).filter(function(d) { return d == "Q15E"})
+  
+  // merge items into a single array
+  dimensions6 = dimensions.concat(dimensions2)
+  dimensions7 = dimensions6.concat(dimensions3)
+  dimensions8 = dimensions7.concat(dimensions4)
+  dimensions9 = dimensions8.concat(dimensions5)
 
 
-  // iterate through question and build a linear scale and store in object
+  // iterate through questions and build a linear scale and store in object
   var y = {}
-  for (i in dimensions) {
-    name = dimensions[i]
+  for (i in dimensions9) {
+    name = dimensions9[i]
     y[name] = d3.scaleLinear()
       .domain( d3.extent(data, function(d) { return +d[name]; }) )
       .range([height, 0])
@@ -49,11 +59,11 @@ d3.csv("a2.csv", function(data) {
   x = d3.scalePoint()
     .range([0, width])
     .padding(1)
-    .domain(dimensions);
+    .domain(dimensions9);
 
   // use row of the csv as input, and return x and y coordinates of the line
   function path(d) {
-      return d3.line()(dimensions.map(function(p) { return [x(p), y[p](d[p])]; }));
+      return d3.line()(dimensions9.map(function(p) { return [x(p), y[p](d[p])]; }));
   }
 
 
@@ -71,7 +81,7 @@ d3.csv("a2.csv", function(data) {
   // draw the axis:
   svg.selectAll("axis")
     // add g element to each item in data set
-    .data(dimensions).enter()
+    .data(dimensions9).enter()
     .append("g")
     // translate element to position on the x axis
     .attr("transform", function(d) { return "translate(" + x(d) + ")"; })
@@ -81,7 +91,7 @@ d3.csv("a2.csv", function(data) {
     .append("text")
       .style("text-anchor", "middle")
       .attr("y", -9)
-      .text(function(d) { return d; })
+      .text(function(d) { return d; }) /** Edit this line to change axis titles **/
       .style("fill", "black")
 
 })
