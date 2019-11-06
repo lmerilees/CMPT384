@@ -2,26 +2,31 @@
     <head>
         <meta charset="utf-8" />
         <title>Trade Node Vis</title>
-        <script
-            type="text/javascript"
-            src="https://d3js.org/d3.v5.min.js"
-        ></script>
+        <script type="text/javascript" src="d3.v5.min.js"></script>
         <h1><center>2015 Trade Transactions</center></h1>
     </head>
 
     <body></body>
 
-    <script>
-        // TODO
+    <script type="text/javascript">
+        var width = 800;
+        var height = 400;
+        var CountryData;
+        var tradeData;
+        var coordinates;
 
         // data[0]: this is all of country list data
         // data[1]: this is all trade data
         Promise.all([d3.csv("Country_List.csv"), d3.csv("gemstone15.csv")])
             .then(function(data) {
-                // console.log(data[1]);
+                CountryData = data[0];
+                tradeData = data[1];
+                generateVisualization();
             })
             .catch(function(err) {
                 console.log(err);
             });
+
+        function generateVisualization() {}
     </script>
 </html>
