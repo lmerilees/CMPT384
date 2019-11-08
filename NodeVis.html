@@ -9,11 +9,8 @@
     <body></body>
 
     <script type="text/javascript">
-        var width = 800;
-        var height = 400;
         var CountryData;
         var tradeData;
-        var coordinates;
 
         // data[0]: this is all of country list data
         // data[1]: this is all trade data
@@ -27,6 +24,51 @@
                 console.log(err);
             });
 
-        function generateVisualization() {}
+        // create the visualization
+        function generateVisualization() {
+            // size of window
+            var margin = { top: 10, right: 90, bottom: 300, left: 60 },
+                width = 800 - margin.left - margin.right,
+                height = 700 - margin.top - margin.bottom;
+
+            // create the svg body
+            var svg = d3
+                .select("body")
+                .append("svg")
+                .attr("style", "outline: thin solid black;")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .attr(
+                    "transform",
+                    "translate(" + margin.left + "," + margin.top + ")"
+                );
+
+            // create the x
+            var x = d3
+                .scaleLinear()
+                .domain([0, 300])
+                .range([0, width]);
+
+            // create the y
+            var y = d3
+                .scaleLinear()
+                .domain([0, 400])
+                .range([height, 0]);
+
+            // add dots
+            svg.append("g")
+                .selectAll("dot")
+                .data(CountryData)
+                .enter()
+                .append("circle")
+                .attr("cx", function(d) {
+                    return x(d.Longitude * 2);
+                })
+                .attr("cy", function(d) {
+                    return y(d.Latitude * 4);
+                })
+                .attr("r", 3)
+                .style("fill", "blue");
+        }
     </script>
 </html>
