@@ -46,17 +46,18 @@
             // create the x
             var x = d3
                 .scaleLinear()
-                .domain([0, 300])
+                .domain([-300, 300])
                 .range([0, width]);
 
             // create the y
             var y = d3
                 .scaleLinear()
-                .domain([0, 400])
+                .domain([-400, 400])
                 .range([height, 0]);
 
             // add dots
-            var nodes = svg.selectAll("dot")
+            var nodes = svg
+                .selectAll("dot")
                 .data(CountryData)
                 .enter()
                 .append("circle")
@@ -68,16 +69,11 @@
                 })
                 .attr("r", 3)
                 .style("fill", "blue");
-				
-				
-				    //Add titles on mouse hover
-			nodes.append("title")
-			.text(function(d) {
-			
-				return d.Alpha3;
-				});
-				
-			}
-			
+
+            //Add titles on mouse hover
+            nodes.append("title").text(function(d) {
+                return d.Alpha3;
+            });
+        }
     </script>
 </html>
