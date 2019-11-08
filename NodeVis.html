@@ -26,6 +26,22 @@
 
         // create the visualization
         function generateVisualization() {
+            var dataStruct = [{ Node: [] }, { Edge: [] }];
+
+            for (var i = 0; i < CountryData.length; i++) {
+                dataStruct[0].Node[i] = { Name: CountryData[i].Alpha3 };
+            }
+
+            for (var i = 0; i < tradeData.length; i++) {
+                dataStruct[1].Edge[i] = {
+                    Import: tradeData[i].Exporter,
+                    Export: tradeData[i].Importer,
+                    Weight: tradeData[i].Value
+                };
+            }
+
+            console.log(dataStruct);
+
             // size of window
             var margin = { top: 10, right: 90, bottom: 300, left: 60 },
                 width = 800 - margin.left - margin.right,
@@ -53,7 +69,7 @@
             var y = d3
                 .scaleLinear()
                 .domain([-400, 400])
-                .range([height, 0]);
+                .range([height + 100, 0]);
 
             // add dots
             var nodes = svg
@@ -65,7 +81,7 @@
                     return x(d.Longitude * 2);
                 })
                 .attr("cy", function(d) {
-                    return y(d.Latitude * 4);
+                    return y(d.Latitude * 5);
                 })
                 .attr("r", 3)
                 .style("fill", "blue");
