@@ -30,15 +30,17 @@
 
         // create the visualization
         function generateVisualization() {
-// ########### Data Manipulation ##################
+            // ########### Data Manipulation ##################
 
-            // merge repeted edges
+             // merge repeted edges
             var edges = [];
             // put the first one in array
             edges.push(tradeData[0]);
             for (var i = 0; i < tradeData.length; i++) {
                 // checks that exporters and importers were the same
-                if (edges[edges.length - 1].Exporter == tradeData[i].Exporter && edges[edges.length - 1].Importer == tradeData[i].Importer
+                if (
+                    edges[edges.length - 1].Exporter == tradeData[i].Exporter &&
+                    edges[edges.length - 1].Importer == tradeData[i].Importer
                 ) {
                     // if they are the same and not the first one
                     if (i != 0) {
@@ -48,7 +50,7 @@
                             parseFloat(edges[edges.length - 1].Value) +
                             parseFloat(tradeData[i].Value);
                     }
-                } 
+                }
                 // if not the first one push to array
                 else if (i != 0) {
                     edges.push(tradeData[i]);
@@ -60,52 +62,96 @@
             // sets nodes
             for (var i = 0; i < CountryData.length; i++) {
                 dataStruct.node[i] = {
-                    Name: CountryData[i].Alpha3,
-                    lat: CountryData[i].Latitude,
-                    long: CountryData[i].Longitude
+                    "id": CountryData[i].Alpha3,
+                    "lat": CountryData[i].Latitude,
+                    "long": CountryData[i].Longitude
                 };
             }
-            //  sets edges
-            for (var i = 0; i < tradeData.length; i++) {
-                dataStruct.edge[i] = edges[i];
+            //  sets edges 
+            for (var i = 0; i < edges.length; i++) {
+                dataStruct.edge[i] = {
+                    "source": edges[i].Exporter,
+                    "target": edges[i].Importer,
+                    "weight": edges[i].Value
+                };
             }
-// ########### Data Manipulation END ##################
-           
-        var width = 950;
-        var height = 600;
+            // ########### Data Manipulation END ##################
 
-        //Define map projection
-        var projection = d3.geoMercator()
-            .translate([width / 2, height / 2])
-            .center([0, 30.5])
-            .scale(140);
-        //Create SVG element
-        var svg = d3.select("body")
-            .append("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .attr("style", "outline: thin solid black;");;
-        // project points on map
-        svg.selectAll("circle")
-            .data(dataStruct.node).enter()
-            .append("circle")
-            .attr("cx", function (d) { return projection([d.long, d.lat])[0]; })
-            .attr("cy", function (d) { return projection([d.long, d.lat])[1]; })
-            .attr("r", "5px")
-            .attr("fill", "blue");
+            var width = 950;
+            var height = 600;
 
+            //Define map projection
+            var projection = d3
+                .geoMercator()
+                .translate([width / 2, height / 2])
+                .center([0, 30.5])
+                .scale(140);
+            //Create SVG element
+            var svg = d3
+                .select("body")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("style", "outline: thin solid black;");
 
+            var tooltip = d3
+                .select("body")
+                .append("div")
+                .style("opacity", 0)
+                .attr("class", "tooltip");
 
-            
+            // ######### To Remove Later #############
+            var mouseover = function(d) {
+                tooltip.style("opacity", 1);
+            };
 
+            var mousemove = function(d) {
+                tooltip
+                    .html(d.id)
+                    .style("left", d3.mouse(this)[0] + 90 + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
+                    .style("top", d3.mouse(this)[1] + "px");
+            };
 
+            var mouseleave = function(d) {
+                tooltip
+                    .transition()
+                    .duration(200)
+                    .style("opacity", 0);
+            };
+            // ################End To Remove######################
 
+            var link = svg.selectAll(".link"),
+                node = svg.selectAll(".node");
 
+            // project points on map
+            // svg.selectAll("circle")
+            node = node
+                .data(dataStruct.node)
+                .enter()
+                .append("circle")
+                .attr("class", "node")
+                .attr("cx", function(d) {
+                    return projection([d.long, d.lat])[0];
+                })
+                .attr("cy", function(d) {
+                    return projection([d.long, d.lat])[1];
+                })
+                .attr("r", "5px")
+                .attr("fill", "blue")
+                //### To Remove #####
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave);
+            // ### End To Remove #####
 
-            // Add titles on mouse hover
-            // nodes.append("title").text(function(d) {
-            //     return d.Name;
-            // });
+            // ####### SHit Aint Workin########
+            console.log(dataStruct);
+            // Draw line
+            link = link
+            .data(dataStruct.edge)
+            .enter()
+            .append("line")
+            .attr("class", "link");
         }
     </script>
 </html>
