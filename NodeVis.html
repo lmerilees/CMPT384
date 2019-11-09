@@ -17,7 +17,8 @@
         Promise.all([d3.csv("Country_List.csv"), d3.csv("gemstone15.csv")])
             .then(function(data) {
                 CountryData = data[0];
-                tradeData = data[1];
+                
+                tradeData = data[1].map(({Exporter,Importer,Value}) => ({Exporter:Exporter,Importer:Importer,Value:parseFloat(Value)}));
                 generateVisualization();
             })
             .catch(function(err) {
@@ -26,20 +27,33 @@
 
         // create the visualization
         function generateVisualization() {
-            var dataStruct = [{ Node: [] }, { Edge: [] }];
+            // remove multiple
+            var edges = [];
+            edges.push(tradeData[0]);
+            for (var i = 0; i < tradeData.length; i++) {
+                if (edges[edges.length - 1].Exporter == tradeData[i].Exporter && edges[edges.length - 1].Importer == tradeData[i].Importer) {
+                    if(i!=0){
+                        edges[edges.length - 1].Value =  parseFloat(edges[edges.length - 1].Value)+ parseFloat(tradeData[i].Value);
+                    }
+                }
+                else if (i!=0){
+                    edges.push(tradeData[i]);
+                }
+            }
+
+            // Node and data object
+            var dataStruct = { node: [], edge: [] };
 
             for (var i = 0; i < CountryData.length; i++) {
-                dataStruct[0].Node[i] = { Name: CountryData[i].Alpha3 };
-            }
-
-            for (var i = 0; i < tradeData.length; i++) {
-                dataStruct[1].Edge[i] = {
-                    Import: tradeData[i].Exporter,
-                    Export: tradeData[i].Importer,
-                    Weight: tradeData[i].Value
+                dataStruct.node[i] = {
+                    Name: CountryData[i].Alpha3,
+                    lat: CountryData[i].Latitude,
+                    long: CountryData[i].Longitude
                 };
             }
-
+            for (var i = 0; i < tradeData.length; i++) {
+                dataStruct.edge[i] = edges[i];
+            }
             console.log(dataStruct);
 
             // size of window
@@ -74,21 +88,21 @@
             // add dots
             var nodes = svg
                 .selectAll("dot")
-                .data(CountryData)
+                .data(dataStruct.node)
                 .enter()
                 .append("circle")
                 .attr("cx", function(d) {
-                    return x(d.Longitude * 2);
+                    return x(d.long * 2);
                 })
                 .attr("cy", function(d) {
-                    return y(d.Latitude * 5);
+                    return y(d.lat * 5);
                 })
                 .attr("r", 3)
                 .style("fill", "blue");
 
             //Add titles on mouse hover
             nodes.append("title").text(function(d) {
-                return d.Alpha3;
+                return d.Name;
             });
         }
     </script>
