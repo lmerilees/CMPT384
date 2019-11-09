@@ -17,8 +17,11 @@
         Promise.all([d3.csv("Country_List.csv"), d3.csv("gemstone15.csv")])
             .then(function(data) {
                 CountryData = data[0];
-                
-                tradeData = data[1].map(({Exporter,Importer,Value}) => ({Exporter:Exporter,Importer:Importer,Value:parseFloat(Value)}));
+                tradeData = data[1].map(({ Exporter, Importer, Value }) => ({
+                    Exporter: Exporter,
+                    Importer: Importer,
+                    Value: parseFloat(Value)
+                }));
                 generateVisualization();
             })
             .catch(function(err) {
@@ -27,23 +30,32 @@
 
         // create the visualization
         function generateVisualization() {
-            // remove multiple
+            // merge repeted edges
             var edges = [];
+            // put the first one in array
             edges.push(tradeData[0]);
             for (var i = 0; i < tradeData.length; i++) {
-                if (edges[edges.length - 1].Exporter == tradeData[i].Exporter && edges[edges.length - 1].Importer == tradeData[i].Importer) {
-                    if(i!=0){
-                        edges[edges.length - 1].Value =  parseFloat(edges[edges.length - 1].Value)+ parseFloat(tradeData[i].Value);
+                // checks that exporters and importers were the same
+                if (edges[edges.length - 1].Exporter == tradeData[i].Exporter && edges[edges.length - 1].Importer == tradeData[i].Importer
+                ) {
+                    // if they are the same and not the first one
+                    if (i != 0) {
+                        // sums the last data in array that is the same as we are checking
+                        // and sums the values
+                        edges[edges.length - 1].Value =
+                            parseFloat(edges[edges.length - 1].Value) +
+                            parseFloat(tradeData[i].Value);
                     }
-                }
-                else if (i!=0){
+                } 
+                // if not the first one push to array
+                else if (i != 0) {
                     edges.push(tradeData[i]);
                 }
             }
 
-            // Node and data object
+            // Node and data object data struct
             var dataStruct = { node: [], edge: [] };
-
+            // sets nodes
             for (var i = 0; i < CountryData.length; i++) {
                 dataStruct.node[i] = {
                     Name: CountryData[i].Alpha3,
@@ -51,10 +63,10 @@
                     long: CountryData[i].Longitude
                 };
             }
+            //  sets edges
             for (var i = 0; i < tradeData.length; i++) {
                 dataStruct.edge[i] = edges[i];
             }
-            console.log(dataStruct);
 
             // size of window
             var margin = { top: 10, right: 90, bottom: 300, left: 60 },
@@ -87,18 +99,22 @@
 
             // add dots
             var nodes = svg
-                .selectAll("dot")
+                .selectAll("circle")
                 .data(dataStruct.node)
                 .enter()
                 .append("circle")
                 .attr("cx", function(d) {
-                    return x(d.long * 2);
-                })
+                    return x(d.long * 2);})
                 .attr("cy", function(d) {
-                    return y(d.lat * 5);
-                })
+                    return y(d.lat * 5);})
                 .attr("r", 3)
                 .style("fill", "blue");
+                
+            var edges = svg
+                .selectAll("line")
+                .data(dataStruct.edges)
+                .enter()
+                .append("line");
 
             //Add titles on mouse hover
             nodes.append("title").text(function(d) {
