@@ -7,7 +7,17 @@
     </head>
 
     <body></body>
+    <style>
+        .node {
+            stroke: black;
+            stroke-width: 1.5px;
+        }
 
+        .link {
+            fill: blue;
+            stroke: blue;
+        }
+    </style>
     <script type="text/javascript">
         var CountryData;
         var tradeData;
@@ -16,6 +26,7 @@
         // data[1]: this is all trade data
         Promise.all([d3.csv("Country_List.csv"), d3.csv("gemstone15.csv")])
             .then(function(data) {
+                // put data into different containers and changes the datatypes
                 CountryData = data[0];
                 tradeData = data[1].map(({ Exporter, Importer, Value }) => ({
                     Exporter: Exporter,
@@ -32,7 +43,7 @@
         function generateVisualization() {
             // ########### Data Manipulation ##################
 
-             // merge repeted edges
+            // merge repeted edges
             var edges = [];
             // put the first one in array
             edges.push(tradeData[0]);
@@ -62,19 +73,43 @@
             // sets nodes
             for (var i = 0; i < CountryData.length; i++) {
                 dataStruct.node[i] = {
-                    "id": CountryData[i].Alpha3,
-                    "lat": CountryData[i].Latitude,
-                    "long": CountryData[i].Longitude
+                    id: CountryData[i].Alpha3,
+                    lat: CountryData[i].Latitude,
+                    long: CountryData[i].Longitude
                 };
             }
-            //  sets edges 
+            //  sets edges
             for (var i = 0; i < edges.length; i++) {
                 dataStruct.edge[i] = {
-                    "source": edges[i].Exporter,
-                    "target": edges[i].Importer,
-                    "weight": edges[i].Value
+                    source: edges[i].Exporter,
+                    target: edges[i].Importer,
+                    weight: edges[i].Value
                 };
             }
+
+            // console.log(edgeData);
+            function getLatLong(nameKey, thisArr) {
+                for (var j = 0; j < thisArr.length; j++) {
+                    if (nameKey === thisArr[j].id) {
+                        return thisArr[j];
+                    }
+                }
+            }
+
+            var edgeData = [];
+            for (var i = 0; i < dataStruct.edge.length; i++) {
+                var exportLatLong = getLatLong(
+                    dataStruct.edge[i].source,
+                    dataStruct.node
+                );
+                var importLatLong = getLatLong(
+                    dataStruct.edge[i].target,
+                    dataStruct.node
+                );
+
+                edgeData[i] = [exportLatLong, importLatLong];
+            }
+
             // ########### Data Manipulation END ##################
 
             var width = 950;
@@ -89,6 +124,7 @@
             //Create SVG element
             var svg = d3
                 .select("body")
+                .attr("align", "center")
                 .append("svg")
                 .attr("width", width)
                 .attr("height", height)
@@ -120,12 +156,8 @@
             };
             // ################End To Remove######################
 
-            var link = svg.selectAll(".link"),
-                node = svg.selectAll(".node");
-
             // project points on map
-            // svg.selectAll("circle")
-            node = node
+            svg.selectAll("circle")
                 .data(dataStruct.node)
                 .enter()
                 .append("circle")
@@ -137,21 +169,43 @@
                     return projection([d.long, d.lat])[1];
                 })
                 .attr("r", "5px")
-                .attr("fill", "blue")
+                .attr("fill", "white")
                 //### To Remove #####
                 .on("mouseover", mouseover)
                 .on("mousemove", mousemove)
                 .on("mouseleave", mouseleave);
             // ### End To Remove #####
 
-            // ####### SHit Aint Workin########
-            console.log(dataStruct);
+            // ####### SHit Aint workin #########
+            // console.log(dataStruct);
             // Draw line
-            link = link
-            .data(dataStruct.edge)
-            .enter()
-            .append("line")
-            .attr("class", "link");
+            console.log(edgeData);
+            var line = svg
+                .data(edgeData)
+                .append("line")
+                .attr("x1", function(d) {
+                    projection([d[0].long, d[0].lat])[0];
+                })
+                .attr("y1", function(d) {
+                    projection([d[0].long, d[0].lat])[1];
+                })
+                .attr("x2", function(d) {
+                    projection([d[1].long, d[1].lat])[0];
+                })
+                .attr("y2", function(d) {
+                    projection([d[1].long, d[1].lat])[1];
+                })
+                .attr("stroke-width", 5)
+                .attr("stroke", "black");
+
+            // d3.selectAll("svg")
+            // .data(edgeData)
+            // .append("line")
+            // .attr("x1", function(d){d[0].long})
+            // .attr("y1", function(d){d[0].lat})
+            // .attr("x2", function(d){d[1].long})
+            // .attr("y2", function(d){d[1].lat})
+            // .style("stroke-width","#ccc" );
         }
     </script>
 </html>
