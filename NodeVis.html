@@ -30,6 +30,8 @@
 
         // create the visualization
         function generateVisualization() {
+// ########### Data Manipulation ##################
+
             // merge repeted edges
             var edges = [];
             // put the first one in array
@@ -67,59 +69,43 @@
             for (var i = 0; i < tradeData.length; i++) {
                 dataStruct.edge[i] = edges[i];
             }
+// ########### Data Manipulation END ##################
+           
+        var width = 950;
+        var height = 600;
 
-            // size of window
-            var margin = { top: 10, right: 90, bottom: 300, left: 60 },
-                width = 800 - margin.left - margin.right,
-                height = 700 - margin.top - margin.bottom;
+        //Define map projection
+        var projection = d3.geoMercator()
+            .translate([width / 2, height / 2])
+            .center([0, 30.5])
+            .scale(140);
+        //Create SVG element
+        var svg = d3.select("body")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .attr("style", "outline: thin solid black;");;
+        // project points on map
+        svg.selectAll("circle")
+            .data(dataStruct.node).enter()
+            .append("circle")
+            .attr("cx", function (d) { return projection([d.long, d.lat])[0]; })
+            .attr("cy", function (d) { return projection([d.long, d.lat])[1]; })
+            .attr("r", "5px")
+            .attr("fill", "blue");
 
-            // create the svg body
-            var svg = d3
-                .select("body")
-                .append("svg")
-                .attr("style", "outline: thin solid black;")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .attr(
-                    "transform",
-                    "translate(" + margin.left + "," + margin.top + ")"
-                );
 
-            // create the x
-            var x = d3
-                .scaleLinear()
-                .domain([-300, 300])
-                .range([0, width]);
 
-            // create the y
-            var y = d3
-                .scaleLinear()
-                .domain([-400, 400])
-                .range([height + 100, 0]);
+            
 
-            // add dots
-            var nodes = svg
-                .selectAll("circle")
-                .data(dataStruct.node)
-                .enter()
-                .append("circle")
-                .attr("cx", function(d) {
-                    return x(d.long * 2);})
-                .attr("cy", function(d) {
-                    return y(d.lat * 5);})
-                .attr("r", 3)
-                .style("fill", "blue");
-                
-            var edges = svg
-                .selectAll("line")
-                .data(dataStruct.edges)
-                .enter()
-                .append("line");
 
-            //Add titles on mouse hover
-            nodes.append("title").text(function(d) {
-                return d.Name;
-            });
+
+
+
+            // Add titles on mouse hover
+            // nodes.append("title").text(function(d) {
+            //     return d.Name;
+            // });
         }
     </script>
 </html>
