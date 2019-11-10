@@ -130,13 +130,14 @@
 
             var tooltip = d3
                 .select("body")
-                .append("div")
+                .append("div" + "Exports")
                 .style("opacity", 0)
                 .attr("class", "tooltip");
 
             // ######### To Remove Later #############
             var mouseover = function(d) {
                 tooltip.style("opacity", 1);
+				//tooltip.text("Exports");
             };
 
             var mousemove = function(d) {
@@ -173,7 +174,14 @@
                     d3.selectAll("circle").remove();
                     d3.selectAll("line").remove();
                     // Update Graph with all countries that d.id export to 
-                    update(UpdateEdge, UpdateNode); 
+                    update(UpdateEdge, UpdateNode);	
+
+					// update tooltip to display exports
+					tooltip
+                    .html(d.id + " Exports")
+                    .style("left", d3.mouse(this)[0] + 90 + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
+                    .style("top", d3.mouse(this)[1] + "px");
+					
                 }
                 else if(click == 2 ){
                     // puts all edges that have d.id as Import into array (translated into coords already)
@@ -189,7 +197,13 @@
                     d3.selectAll("circle").remove();
                     d3.selectAll("line").remove();  
                     // update the graph with all countries that export to d.id
-                    update(UpdateEdge, UpdateNode);         
+                    update(UpdateEdge, UpdateNode); 
+
+					// update tooltip ti display imports
+					tooltip
+                    .html(d.id + " Imports")
+                    .style("left", d3.mouse(this)[0] + 90 + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
+                    .style("top", d3.mouse(this)[1] + "px");				
                 }
                 else{
                     click = 0;
@@ -198,8 +212,15 @@
                     d3.selectAll("line").remove();
                     // update with origional data
                     update(edgeData, dataStruct.node);
+					
+					// reset tooltip back to only display country
+					tooltip
+                    .html(d.id)
+                    .style("left", d3.mouse(this)[0] + 90 + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
+                    .style("top", d3.mouse(this)[1] + "px");
                 }
             };
+			
             // first update
             console.log(edgeData[0]);
             update(edgeData, dataStruct.node);
@@ -256,7 +277,5 @@
                 // ### End To Remove #####
             }
         }
-
-        // Draw line
     </script>
 </html>
