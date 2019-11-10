@@ -9,8 +9,8 @@
     <body></body>
     <style>
         .node {
-			fill: red;
-            stroke: red;
+            fill: red;
+            stroke: black;
             stroke-width: 1.5px;
         }
     </style>
@@ -37,28 +37,6 @@
 
         // create the visualization
         function generateVisualization() {
-<<<<<<< HEAD
-            var dataStruct = [{ Node: [] }, { Edge: [] }];
-
-            for (var i = 0; i < CountryData.length; i++) {
-                dataStruct[0].Node[i] = { Name: CountryData[i].Alpha3 };
-            }
-
-            for (var i = 0; i < tradeData.length; i++) {
-                dataStruct[1].Edge[i] = {
-                    Import: tradeData[i].Exporter,
-                    Export: tradeData[i].Importer,
-                    Weight: tradeData[i].Value
-                };
-            }
-
-            console.log(dataStruct);
-
-            // size of window
-            var margin = { top: 10, right: 90, bottom: 300, left: 60 },
-                width = 800 - margin.left - margin.right,
-                height = 700 - margin.top - margin.bottom;
-=======
             // ########### Data Manipulation ##################
 
             // merge repeted edges
@@ -99,12 +77,11 @@
             //  sets edges
             for (var i = 0; i < edges.length; i++) {
                 dataStruct.edge[i] = {
-                    source: edges[i].Exporter,
-                    target: edges[i].Importer,
+                    Exporter: edges[i].Exporter,
+                    Importer: edges[i].Importer,
                     weight: edges[i].Value
                 };
             }
->>>>>>> master
 
             // console.log(edgeData);
             function getLatLong(nameKey, thisArr) {
@@ -118,15 +95,15 @@
             var edgeData = [];
             for (var i = 0; i < dataStruct.edge.length; i++) {
                 var exportLatLong = getLatLong(
-                    dataStruct.edge[i].source,
+                    dataStruct.edge[i].Exporter,
                     dataStruct.node
                 );
                 var importLatLong = getLatLong(
-                    dataStruct.edge[i].target,
+                    dataStruct.edge[i].Importer,
                     dataStruct.node
                 );
-				
-				var edgeWeight = dataStruct.edge[i].weight;
+
+                var edgeWeight = dataStruct.edge[i].weight;
 
                 edgeData[i] = [exportLatLong, importLatLong, edgeWeight];
             }
@@ -151,24 +128,6 @@
                 .attr("height", height)
                 .attr("style", "outline: thin solid black;");
 
-<<<<<<< HEAD
-            // create the x
-            var x = d3
-                .scaleLinear()
-                .domain([-300, 300])
-                .range([0, width]);
-
-            // create the y
-            var y = d3
-                .scaleLinear()
-                .domain([-400, 400])
-                .range([height + 100, 0]);
-
-            // add dots
-            var nodes = svg
-                .selectAll("dot")
-                .data(CountryData)
-=======
             var tooltip = d3
                 .select("body")
                 .append("div")
@@ -193,60 +152,111 @@
                     .duration(200)
                     .style("opacity", 0);
             };
+
+            var click = 0;
+            var mousedown = function(d) {
+                var UpdateNode = [];
+                var UpdateEdge = [];
+                click++;
+
+                if (click == 1) {
+                    // puts all edges that have d.id as export into array (translated into coords already)
+                    // put all nodes that are in edges into array
+                    UpdateNode.push(getLatLong(d.id, dataStruct.node));
+                    for (var i = 0; i < dataStruct.edge.length; i++) {
+                        if (d.id === dataStruct.edge[i].Exporter) {
+                            UpdateEdge.push([getLatLong(dataStruct.edge[i].Exporter, dataStruct.node),  getLatLong(dataStruct.edge[i].Importer, dataStruct.node), dataStruct.edge[i].weight]);
+                            UpdateNode.push(getLatLong(dataStruct.edge[i].Importer, dataStruct.node));
+                        }
+                    }
+                    // removes current edges and lines
+                    d3.selectAll("circle").remove();
+                    d3.selectAll("line").remove();
+                    // Update Graph with all countries that d.id export to 
+                    update(UpdateEdge, UpdateNode); 
+                }
+                else if(click == 2 ){
+                    // puts all edges that have d.id as Import into array (translated into coords already)
+                    // put all nodes that are in edges into array
+                    UpdateNode.push(getLatLong(d.id, dataStruct.node));
+                    for (var i = 0; i < dataStruct.edge.length; i++) {
+                        if (d.id === dataStruct.edge[i].Importer) {
+                            UpdateEdge.push([getLatLong(dataStruct.edge[i].Exporter, dataStruct.node),  getLatLong(dataStruct.edge[i].Importer, dataStruct.node), dataStruct.edge[i].weight]);
+                            UpdateNode.push(getLatLong(dataStruct.edge[i].Exporter, dataStruct.node));
+                        }
+                    }
+                    // removes current edges and lines
+                    d3.selectAll("circle").remove();
+                    d3.selectAll("line").remove();  
+                    // update the graph with all countries that export to d.id
+                    update(UpdateEdge, UpdateNode);         
+                }
+                else{
+                    click = 0;
+                    // removes current edges and lines
+                    d3.selectAll("circle").remove();
+                    d3.selectAll("line").remove();
+                    // update with origional data
+                    update(edgeData, dataStruct.node);
+                }
+            };
+            // first update
+            console.log(edgeData[0]);
+            update(edgeData, dataStruct.node);
+            console.log(dataStruct.node[0]);
+            console.log(dataStruct.edge[0]);
+
             // ################End To Remove#####################
 
+            // each mouse click
 
-            // Draw line
-            var line = svg.selectAll("line")
-                .data(edgeData)
-				.enter()
-                .append("line")
-                .attr("x1", function(d) {
-                    return projection([d[0].lon, d[0].lat])[0];
-                })
-                .attr("y1", function(d) {
-                    return projection([d[0].lon, d[0].lat])[1];
-                })
-                .attr("x2", function(d) {
-                    return projection([d[1].lon, d[1].lat])[0];
-                })
-                .attr("y2", function(d) {
-                    return projection([d[1].lon, d[1].lat])[1];
-                })
-				.attr("opacity", function(d){
-					console.log(d[2]);
-					return d[2];
-					
-				})
-                .attr("stroke-width", 0.2)
-                .attr("stroke", "blue");
-				
+            function update(edge, node) {
+                var line = svg
+                    .selectAll("line")
+                    .data(edge)
+                    .enter()
+                    .append("line")
+                    .attr("x1", function(d) {
+                        return projection([d[0].lon, d[0].lat])[0];
+                    })
+                    .attr("y1", function(d) {
+                        return projection([d[0].lon, d[0].lat])[1];
+                    })
+                    .attr("x2", function(d) {
+                        return projection([d[1].lon, d[1].lat])[0];
+                    })
+                    .attr("y2", function(d) {
+                        return projection([d[1].lon, d[1].lat])[1];
+                    })
+                    .attr("opacity", function(d) {
+                        return d[2];
+                    })
+                    .attr("stroke-width", .3)
+                    .attr("stroke", "blue");
 
-			// project points on map
-            svg.selectAll("circle")
-                .data(dataStruct.node)
->>>>>>> master
-                .enter()
-                .append("circle")
-                .attr("class", "node")
-                .attr("cx", function(d) {
-                    return projection([d.lon, d.lat])[0];
-                })
-                .attr("cy", function(d) {
-<<<<<<< HEAD
-                    return y(d.Latitude * 5);
-=======
-                    return projection([d.lon, d.lat])[1];
->>>>>>> master
-                })
-                .attr("r", "5px")
-                .attr("fill", "white")
-                //### To Remove #####
-                .on("mouseover", mouseover)
-                .on("mousemove", mousemove)
-                .on("mouseleave", mouseleave);
-            // ### End To Remove #####
-				
+                // project points on map
+                svg.selectAll("circle")
+                    .data(node)
+                    .enter()
+                    .append("circle")
+                    .attr("class", "node")
+                    .attr("cx", function(d) {
+                        return projection([d.lon, d.lat])[0];
+                    })
+                    .attr("cy", function(d) {
+                        return projection([d.lon, d.lat])[1];
+                    })
+                    .attr("r", "3px")
+                    .attr("fill", "white")
+                    //### To Remove #####
+                    .on("mouseover", mouseover)
+                    .on("mousemove", mousemove)
+                    .on("mouseleave", mouseleave)
+                    .on("mousedown", mousedown);
+                // ### End To Remove #####
+            }
         }
+
+        // Draw line
     </script>
 </html>
