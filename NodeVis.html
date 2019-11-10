@@ -7,7 +7,13 @@
     </head>
 
     <body></body>
-
+    <style>
+        .node {
+			fill: red;
+            stroke: red;
+            stroke-width: 1.5px;
+        }
+    </style>
     <script type="text/javascript">
         var CountryData;
         var tradeData;
@@ -16,8 +22,13 @@
         // data[1]: this is all trade data
         Promise.all([d3.csv("Country_List.csv"), d3.csv("gemstone15.csv")])
             .then(function(data) {
+                // put data into different containers and changes the datatypes
                 CountryData = data[0];
-                tradeData = data[1];
+                tradeData = data[1].map(({ Exporter, Importer, Value }) => ({
+                    Exporter: Exporter,
+                    Importer: Importer,
+                    Value: parseFloat(Value)
+                }));
                 generateVisualization();
             })
             .catch(function(err) {
@@ -26,6 +37,7 @@
 
         // create the visualization
         function generateVisualization() {
+<<<<<<< HEAD
             var dataStruct = [{ Node: [] }, { Edge: [] }];
 
             for (var i = 0; i < CountryData.length; i++) {
@@ -46,19 +58,100 @@
             var margin = { top: 10, right: 90, bottom: 300, left: 60 },
                 width = 800 - margin.left - margin.right,
                 height = 700 - margin.top - margin.bottom;
+=======
+            // ########### Data Manipulation ##################
 
-            // create the svg body
+            // merge repeted edges
+            var edges = [];
+            // put the first one in array
+            edges.push(tradeData[0]);
+            for (var i = 0; i < tradeData.length; i++) {
+                // checks that exporters and importers were the same
+                if (
+                    edges[edges.length - 1].Exporter == tradeData[i].Exporter &&
+                    edges[edges.length - 1].Importer == tradeData[i].Importer
+                ) {
+                    // if they are the same and not the first one
+                    if (i != 0) {
+                        // sums the last data in array that is the same as we are checking
+                        // and sums the values
+                        edges[edges.length - 1].Value =
+                            parseFloat(edges[edges.length - 1].Value) +
+                            parseFloat(tradeData[i].Value);
+                    }
+                }
+                // if not the first one push to array
+                else if (i != 0) {
+                    edges.push(tradeData[i]);
+                }
+            }
+
+            // Node and data object data struct
+            var dataStruct = { node: [], edge: [] };
+            // sets nodes
+            for (var i = 0; i < CountryData.length; i++) {
+                dataStruct.node[i] = {
+                    id: CountryData[i].Alpha3,
+                    lat: CountryData[i].Latitude,
+                    lon: CountryData[i].Longitude
+                };
+            }
+            //  sets edges
+            for (var i = 0; i < edges.length; i++) {
+                dataStruct.edge[i] = {
+                    source: edges[i].Exporter,
+                    target: edges[i].Importer,
+                    weight: edges[i].Value
+                };
+            }
+>>>>>>> master
+
+            // console.log(edgeData);
+            function getLatLong(nameKey, thisArr) {
+                for (var j = 0; j < thisArr.length; j++) {
+                    if (nameKey === thisArr[j].id) {
+                        return thisArr[j];
+                    }
+                }
+            }
+
+            var edgeData = [];
+            for (var i = 0; i < dataStruct.edge.length; i++) {
+                var exportLatLong = getLatLong(
+                    dataStruct.edge[i].source,
+                    dataStruct.node
+                );
+                var importLatLong = getLatLong(
+                    dataStruct.edge[i].target,
+                    dataStruct.node
+                );
+				
+				var edgeWeight = dataStruct.edge[i].weight;
+
+                edgeData[i] = [exportLatLong, importLatLong, edgeWeight];
+            }
+
+            // ########### Data Manipulation END ##################
+
+            var width = 950;
+            var height = 600;
+
+            //Define map projection
+            var projection = d3
+                .geoMercator()
+                .translate([width / 2, height / 2])
+                .center([0, 30.5])
+                .scale(140);
+            //Create SVG element
             var svg = d3
                 .select("body")
+                .attr("align", "center")
                 .append("svg")
-                .attr("style", "outline: thin solid black;")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .attr(
-                    "transform",
-                    "translate(" + margin.left + "," + margin.top + ")"
-                );
+                .attr("width", width)
+                .attr("height", height)
+                .attr("style", "outline: thin solid black;");
 
+<<<<<<< HEAD
             // create the x
             var x = d3
                 .scaleLinear()
@@ -75,21 +168,85 @@
             var nodes = svg
                 .selectAll("dot")
                 .data(CountryData)
+=======
+            var tooltip = d3
+                .select("body")
+                .append("div")
+                .style("opacity", 0)
+                .attr("class", "tooltip");
+
+            // ######### To Remove Later #############
+            var mouseover = function(d) {
+                tooltip.style("opacity", 1);
+            };
+
+            var mousemove = function(d) {
+                tooltip
+                    .html(d.id)
+                    .style("left", d3.mouse(this)[0] + 90 + "px") // It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
+                    .style("top", d3.mouse(this)[1] + "px");
+            };
+
+            var mouseleave = function(d) {
+                tooltip
+                    .transition()
+                    .duration(200)
+                    .style("opacity", 0);
+            };
+            // ################End To Remove#####################
+
+
+            // Draw line
+            var line = svg.selectAll("line")
+                .data(edgeData)
+				.enter()
+                .append("line")
+                .attr("x1", function(d) {
+                    return projection([d[0].lon, d[0].lat])[0];
+                })
+                .attr("y1", function(d) {
+                    return projection([d[0].lon, d[0].lat])[1];
+                })
+                .attr("x2", function(d) {
+                    return projection([d[1].lon, d[1].lat])[0];
+                })
+                .attr("y2", function(d) {
+                    return projection([d[1].lon, d[1].lat])[1];
+                })
+				.attr("opacity", function(d){
+					console.log(d[2]);
+					return d[2];
+					
+				})
+                .attr("stroke-width", 0.2)
+                .attr("stroke", "blue");
+				
+
+			// project points on map
+            svg.selectAll("circle")
+                .data(dataStruct.node)
+>>>>>>> master
                 .enter()
                 .append("circle")
+                .attr("class", "node")
                 .attr("cx", function(d) {
-                    return x(d.Longitude * 2);
+                    return projection([d.lon, d.lat])[0];
                 })
                 .attr("cy", function(d) {
+<<<<<<< HEAD
                     return y(d.Latitude * 5);
+=======
+                    return projection([d.lon, d.lat])[1];
+>>>>>>> master
                 })
-                .attr("r", 3)
-                .style("fill", "blue");
-
-            //Add titles on mouse hover
-            nodes.append("title").text(function(d) {
-                return d.Alpha3;
-            });
+                .attr("r", "5px")
+                .attr("fill", "white")
+                //### To Remove #####
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave);
+            // ### End To Remove #####
+				
         }
     </script>
 </html>
